@@ -24,6 +24,10 @@ permissions:
 
 env:
   AWS_REGION: ap-southeast-2
+  # The distribution's S3 origin has origin path /site, so a viewer request for
+  # /charts/x.svg is fetched from s3://<bucket>/site/charts/x.svg. Publishing to
+  # charts/ at the bucket root would upload happily and serve nothing.
+  S3_PREFIX: site/charts
 
 jobs:
   publish:
@@ -52,17 +56,17 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
-      # Both the source and the destination are the charts/ prefix, so --delete
-      # can only ever remove a chart this build no longer produces. It cannot
-      # reach anything else the bucket serves.
+      # hl7auprojects is shared with the aucore-verified site, so this must stay
+      # narrow: source and destination are both the charts directory, meaning
+      # --delete can only remove a chart this build no longer produces.
       - name: Sync charts to S3
         run: |
-          aws s3 sync site/charts/ "s3://${{ secrets.AWS_BUCKET }}/charts/" --delete \
+          aws s3 sync site/charts/ "s3://${{ secrets.AWS_BUCKET }}/$S3_PREFIX/" --delete \
             --exclude "*" --include "*.svg" \
             --content-type "image/svg+xml; charset=utf-8" \
             --cache-control "public, max-age=300, s-maxage=86400"
           aws s3 cp site/charts/index.html \
-            "s3://${{ secrets.AWS_BUCKET }}/charts/index.html" \
+            "s3://${{ secrets.AWS_BUCKET }}/$S3_PREFIX/index.html" \
             --content-type "text/html; charset=utf-8" \
             --cache-control "public, max-age=300"
 

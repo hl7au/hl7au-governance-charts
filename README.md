@@ -9,8 +9,8 @@ They can be built as files, served locally, or published behind CloudFront and e
 with a plain `<img>`.
 
 ```html
-<img src="https://charts.example/charts/projects.svg" alt="HL7 AU work groups and projects">
-<img src="https://charts.example/render/cochairs.svg?groups=fhir,aucore&dark=1" alt="...">
+<img src="https://apps.hl7.org.au/charts/projects.svg" alt="HL7 AU work groups and projects">
+<img src="https://apps.hl7.org.au/render/cochairs.svg?groups=fhir,aucore&dark=1" alt="...">
 ```
 
 ## Use
@@ -65,8 +65,8 @@ re-space themselves; titles and labels shrink or wrap to fit.
 
 ## Hosting
 
-Published into the existing HL7 AU CloudFront distribution: the SVGs go to the `charts/`
-prefix of its S3 origin. The parameterised `/render/*` endpoint is an optional second
+Published to `https://apps.hl7.org.au/charts/` via the existing HL7 AU CloudFront
+distribution (`s3://hl7auprojects/site/charts/` — note the origin path). The parameterised `/render/*` endpoint is an optional second
 phase. See [`docs/deploy.md`](docs/deploy.md).
 
 ## Making a deck

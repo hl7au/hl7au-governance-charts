@@ -1,13 +1,28 @@
 # Deployment
 
-The charts are published into an **existing** HL7 AU CloudFront distribution
-(`E3RH4ODMG8LT94`, account `966489602583`) rather than one of their own. There is no
-Terraform here: that distribution is not Terraform-managed, and a second state file
-describing it would fight whoever changes it next.
+The charts are published into an **existing** HL7 AU CloudFront distribution rather than
+one of their own. There is no Terraform here: that distribution is not Terraform-managed,
+and a second state file describing it would fight whoever changes it next.
+
+| | |
+|---|---|
+| Distribution | `E3RH4ODMG8LT94` — named `hl7austaging` |
+| Account | `966489602583` |
+| Public URL | **https://apps.hl7.org.au** (also `d14vlf5der2w6d.cloudfront.net`) |
+| S3 origin | `hl7auprojects` (ap-southeast-2), **origin path `/site`** |
+| Other origin | `inferno.hl7.org.au`, serving `/aucore-verified/api/*` |
+
+**The origin path is the thing to remember.** A viewer request for `/charts/x.svg` is
+fetched from `s3://hl7auprojects/site/charts/x.svg`. Publishing to `charts/` at the bucket
+root uploads successfully and serves nothing — the workflow's `S3_PREFIX` is
+`site/charts` for exactly this reason.
 
 ```
-s3://<origin bucket>/charts/*   ->   https://<distribution>/charts/*
+s3://hl7auprojects/site/charts/*   ->   https://apps.hl7.org.au/charts/*
 ```
+
+The bucket also holds the `aucore-verified` site, so both the sync and the deploy role
+stay scoped to the prefix.
 
 ## Phase 1 — static charts (all that is needed to see images online)
 
@@ -24,30 +39,53 @@ Eight files plus an index page, published by `.github/workflows/publish.yml`:
 Embed one with a plain tag — they send `Access-Control-Allow-Origin: *`:
 
 ```html
-<img src="https://<distribution>/charts/projects.svg" alt="HL7 AU work groups and projects">
+<img src="https://apps.hl7.org.au/charts/projects.svg" alt="HL7 AU work groups and projects">
 ```
 
-### Before the first run, confirm three things about the distribution
+### Distribution state as read on 2 September 2026
 
-The workflow assumes all three. If any is false it will publish to a path nothing serves.
+| Precedence | Path pattern | Origin | Cache policy |
+|---|---|---|---|
+| 0 | `/aucore-verified/api/*` | inferno.hl7.org.au | CachingDisabled |
+| 1 | `/aucore-verified` | S3 | CachingDisabled |
+| 2 | `/aucore-verified/*` | S3 | CachingDisabled |
+| 3 | Default `(*)` | S3 | CachingDisabled |
 
-1. **The default cache behaviour's origin is an S3 bucket**, and that bucket is the one
-   in `AWS_BUCKET`.
-2. **That origin has no origin path** (or, if it does, the `charts/` prefix sits inside
-   it — adjust the sync target to match).
-3. **Nothing already answers `/charts/*`** on that distribution.
+Nothing answers `/charts/*`, so the charts land on the default behaviour and are served
+from the S3 origin with no extra configuration. Re-check before assuming this still holds:
 
 ```bash
 aws cloudfront get-distribution-config --id E3RH4ODMG8LT94 \
   --query 'DistributionConfig.{Origins:Origins.Items[].{Id:Id,Domain:DomainName,Path:OriginPath},Default:DefaultCacheBehavior.TargetOriginId,Ordered:CacheBehaviors.Items[].PathPattern}'
 ```
 
+### Recommended, not required: a caching behaviour for `/charts/*`
+
+Every behaviour on this distribution uses **Managed-CachingDisabled**, which is a
+reasonable default for an app but means each chart request goes to S3 and the
+`s-maxage` the workflow sets is ignored at the edge. The charts are static files that
+change on a commit, so they are a poor fit for that.
+
+Adding one behaviour fixes it without touching anything already there:
+
+| Setting | Value |
+|---|---|
+| Path pattern | `/charts/*` |
+| Origin | `hl7auprojects.s3.ap-southeast-2.amazonaws.com` |
+| Viewer protocol | Redirect HTTP to HTTPS |
+| Cache policy | `Managed-CachingOptimized` |
+| Compress | Yes |
+
+Put it above the default. The workflow already invalidates `/charts/*` on every publish,
+so a cached chart is never stale for long. Without this the images still work — they are
+just uncached.
+
 ### Secrets
 
 | Secret | Value |
 |---|---|
 | `AWS_ROLE_ARN` | Deploy role — see `setup-github.md` |
-| `AWS_BUCKET` | The distribution's S3 origin bucket |
+| `AWS_BUCKET` | `hl7auprojects` |
 | `AWS_DISTRIBUTION_ID` | `E3RH4ODMG8LT94` |
 | `AWS_LAMBDA_FUNCTION` | Leave unset until phase 2 |
 
@@ -56,12 +94,15 @@ The role's S3 permissions should be scoped to the prefix, not the bucket:
 ```json
 { "Effect": "Allow",
   "Action": ["s3:PutObject", "s3:DeleteObject"],
-  "Resource": "arn:aws:s3:::<bucket>/charts/*" },
+  "Resource": "arn:aws:s3:::hl7auprojects/site/charts/*" },
 { "Effect": "Allow",
   "Action": ["s3:ListBucket"],
-  "Resource": "arn:aws:s3:::<bucket>",
-  "Condition": { "StringLike": { "s3:prefix": ["charts/*"] } } }
+  "Resource": "arn:aws:s3:::hl7auprojects",
+  "Condition": { "StringLike": { "s3:prefix": ["site/charts/*"] } } }
 ```
+
+That scoping is doing real work: the bucket also serves the `aucore-verified` site, and a
+role that could write the whole bucket is one `--delete` mistake away from removing it.
 
 Two safety properties worth preserving if you edit the workflow: the sync's source and
 destination are both `charts/`, so `--delete` can only remove a chart the build no longer

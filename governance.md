@@ -1,8 +1,6 @@
 # HL7 Australia — Technical Governance
 
-Single source of truth for the governance diagrams. Edit this file, run `python build.py`,
-and every SVG in `out/` is regenerated. Nothing else needs touching to add a person,
-a project, or a whole work group.
+Update this to update diagrams on web site
 
 ## Meta
 

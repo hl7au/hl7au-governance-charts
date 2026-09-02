@@ -1,0 +1,10 @@
+out/
+site/
+infra/.build/
+infra/.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
+__pycache__/
+*.pyc
+.venv/

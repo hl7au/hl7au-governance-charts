@@ -1,0 +1,85 @@
+name: Publish charts
+
+# Republishes the static charts and refreshes the render Lambda whenever the
+# content or the renderer changes.
+on:
+  push:
+    branches: [main]
+    paths:
+      - governance.md
+      - src/**
+      - build.py
+      - lambda_function.py
+      - .github/workflows/publish.yml
+  workflow_dispatch:
+
+concurrency:
+  group: publish
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  id-token: write        # OIDC federation into AWS — no long-lived keys
+
+env:
+  AWS_REGION: ap-southeast-2
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build the site
+        run: python build.py --site site
+
+      - name: Check every chart parses as XML
+        run: |
+          python - <<'PY'
+          import xml.dom.minidom, pathlib
+          for path in sorted(pathlib.Path("site/charts").glob("*.svg")):
+              xml.dom.minidom.parse(str(path))
+              print(f"ok  {path}  {path.stat().st_size:>6} bytes")
+          PY
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # SVGs get a short browser TTL so a republish is picked up quickly;
+      # CloudFront holds them longer and is invalidated below.
+      - name: Sync to S3
+        run: |
+          aws s3 sync site/ "s3://${{ secrets.AWS_BUCKET }}/" --delete \
+            --exclude "*.svg" --exclude "*.html"
+          aws s3 sync site/ "s3://${{ secrets.AWS_BUCKET }}/" --delete \
+            --exclude "*" --include "*.svg" \
+            --content-type "image/svg+xml; charset=utf-8" \
+            --cache-control "public, max-age=300, s-maxage=86400"
+          aws s3 sync site/ "s3://${{ secrets.AWS_BUCKET }}/" --delete \
+            --exclude "*" --include "*.html" \
+            --content-type "text/html; charset=utf-8" \
+            --cache-control "public, max-age=300"
+
+      # The Lambda bundles governance.md, so it needs the new content too.
+      - name: Update the render Lambda
+        run: |
+          zip -qr renderer.zip src lambda_function.py governance.md \
+            -x "*/__pycache__/*"
+          aws lambda update-function-code \
+            --function-name "${{ secrets.AWS_LAMBDA_FUNCTION }}" \
+            --zip-file fileb://renderer.zip \
+            --no-cli-pager > /dev/null
+          aws lambda wait function-updated \
+            --function-name "${{ secrets.AWS_LAMBDA_FUNCTION }}"
+
+      - name: Invalidate CloudFront
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id "${{ secrets.AWS_DISTRIBUTION_ID }}" \
+            --paths "/*" --no-cli-pager > /dev/null

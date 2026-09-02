@@ -15,7 +15,7 @@ a project, or a whole work group.
 Members of the Technical Steering Committee. `Name — Role`; the role is optional.
 
 - Tim Blake — Chair
-- Brett Jame Esler — Deputy Chair
+- Brett Esler — Deputy Chair
 - Kate Ebrill — HL7 AU Chair
 - Danielle Tavares-Rixon — Member Rep 1
 - Heath Frankel — Member Rep 2

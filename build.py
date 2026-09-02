@@ -5,8 +5,9 @@
     python build.py --only projects  # just one diagram
     python build.py --site site      # publishable tree: fixed-URL charts + index page
 
-The `--site` tree is what gets synced to S3. Every file it writes is reachable at
-a stable URL, so a page can embed one with a plain <img src>.
+`--site` writes a single `charts/` directory that maps 1:1 onto the `charts/` prefix
+in the S3 bucket, so the publish is one scoped sync and `--delete` can never reach
+anything else in that bucket.
 """
 from __future__ import annotations
 
@@ -63,7 +64,7 @@ def main() -> None:
             for suffix, options in SITE_VARIANTS.items():
                 write(args.site / "charts" / f"{key}{suffix}.svg",
                       render(model, theme, options))
-        write(args.site / "index.html", index_html())
+        write(args.site / "charts" / "index.html", index_html(static=True))
         count = len(names) * len(SITE_VARIANTS) + 1
         print(f"site       -> {args.site} ({count} files)")
 

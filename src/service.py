@@ -93,22 +93,41 @@ def _diagram_name(path: str) -> str | None:
     return stem if stem in DIAGRAMS else None
 
 
-def index_html(base: str = "") -> str:
-    """A small page documenting the endpoints, with live previews."""
-    examples = [
-        ("Co-chairs", f"{base}/cochairs.svg", "the default"),
-        ("Projects", f"{base}/projects.svg", "the default"),
-        ("Dark", f"{base}/cochairs.svg?dark=1", "for a dark page"),
-        ("No header", f"{base}/projects.svg?header=0",
-         "drops the title block when the page already has a heading"),
-        ("Selected groups", f"{base}/projects.svg?groups=fhir,aucore",
-         "filters and re-orders the columns"),
-    ]
+def index_html(base: str = "", static: bool = False) -> str:
+    """Endpoint documentation with live previews.
+
+    `static=True` builds the copy published to S3 alongside the charts: S3 cannot
+    apply a query string, so it links the pre-built filenames instead.
+    """
+    if static:
+        examples = [
+            ("Co-chairs", "cochairs.svg", "the default"),
+            ("Projects", "projects.svg", "the default"),
+            ("Dark", "cochairs-dark.svg", "for a dark page"),
+            ("No header", "projects-bare.svg",
+             "drops the title block when the page already has a heading"),
+        ]
+        note = ("<p>These four are pre-built files. Anything else &mdash; a subset of "
+                "work groups, a custom width &mdash; needs the <code>/render/</code> "
+                "endpoint.</p>")
+    else:
+        examples = [
+            ("Co-chairs", f"{base}/cochairs.svg", "the default"),
+            ("Projects", f"{base}/projects.svg", "the default"),
+            ("Dark", f"{base}/cochairs.svg?dark=1", "for a dark page"),
+            ("No header", f"{base}/projects.svg?header=0",
+             "drops the title block when the page already has a heading"),
+            ("Selected groups", f"{base}/projects.svg?groups=fhir,aucore",
+             "filters and re-orders the columns"),
+        ]
+        note = ""
+
     rows = "\n".join(
-        f'<figure><figcaption><b>{label}</b> — {note}<br>'
+        f'<figure><figcaption><b>{label}</b> — {note_}<br>'
         f'<code>&lt;img src="{url}"&gt;</code></figcaption>'
         f'<img src="{url}" alt="{label}" loading="lazy"></figure>'
-        for label, url, note in examples)
+        for label, url, note_ in examples)
+
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -131,6 +150,7 @@ def index_html(base: str = "") -> str:
 <h1>HL7 AU governance charts</h1>
 <p class="lede">SVG endpoints for embedding in a page. Generated from
 <code>governance.md</code>.</p>
+{note}
 <table>
 <tr><th>Parameter</th><th>Values</th><th>Effect</th></tr>
 <tr><td><code>groups</code></td><td><code>fhir,aucore,auerequesting,terminology</code></td>

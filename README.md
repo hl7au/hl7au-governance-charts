@@ -65,8 +65,9 @@ re-space themselves; titles and labels shrink or wrap to fit.
 
 ## Hosting
 
-S3 for the fixed URLs, Lambda for the parameterised ones, one CloudFront distribution in
-front of both. Terraform is in [`infra/`](infra/); see [`docs/hosting.md`](docs/hosting.md).
+Published into the existing HL7 AU CloudFront distribution: the SVGs go to the `charts/`
+prefix of its S3 origin. The parameterised `/render/*` endpoint is an optional second
+phase. See [`docs/deploy.md`](docs/deploy.md).
 
 ## Making a deck
 

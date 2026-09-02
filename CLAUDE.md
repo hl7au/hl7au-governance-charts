@@ -15,7 +15,6 @@ src/service.py          routing, caching headers, ETag, the index page
 src/theme.py            palette (light and dark), type scale, canvas geometry
 src/diagrams/base.py    SVG primitives: canvas, bands, cards, connectors, text fitting
 src/diagrams/*.py       one module per diagram
-infra/                  Terraform: S3 + CloudFront + Lambda
 out/, site/             generated (gitignored — regenerate, don't edit)
 ```
 
@@ -41,10 +40,15 @@ also why the Lambda needs no layer.
 
 ## Serving
 
-Fixed URLs are S3 objects built by CI; anything with a query string is rendered by the
-Lambda behind `/render/*`. `src/service.py` is shared by the dev server, the Lambda and
-the site build, so a route behaves the same in all three. `docs/hosting.md` has the
-deployment detail and the reasoning (including why the function URL stays `AWS_IAM`).
+Charts are published into an **existing** CloudFront distribution that this repo does not
+own, under the `charts/` prefix of its S3 origin. There is deliberately no Terraform: two
+states describing one distribution would fight. `src/service.py` is shared by the dev
+server, the Lambda and the site build, so a route behaves the same in all three.
+`docs/deploy.md` has the detail.
+
+Two invariants in the workflow protect a bucket and a distribution we share with other
+content: the S3 sync's source and destination are both `charts/`, so `--delete` cannot
+reach anything else; and the invalidation is `/charts/*`, never `/*`. Keep both.
 
 Publishing has to update **both** origins: the Lambda bundles `governance.md`, so a
 content change that only syncs S3 leaves `/render/*` stale. The workflow does both.

@@ -32,6 +32,10 @@ env:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    # The `secrets` context cannot be used in an `if:` expression, so the optional
+    # Lambda is surfaced as an env var and the steps below test that.
+    env:
+      LAMBDA_FUNCTION: ${{ secrets.AWS_LAMBDA_FUNCTION }}
     steps:
       - uses: actions/checkout@v4
 
@@ -73,23 +77,23 @@ jobs:
       # Optional second phase: only runs once a /render/* Lambda exists.
       # The function bundles governance.md, so it has to be refreshed too.
       - name: Update the render Lambda
-        if: ${{ secrets.AWS_LAMBDA_FUNCTION != '' }}
+        if: env.LAMBDA_FUNCTION != ''
         run: |
           zip -qr renderer.zip src lambda_function.py governance.md \
             -x "*/__pycache__/*"
           aws lambda update-function-code \
-            --function-name "${{ secrets.AWS_LAMBDA_FUNCTION }}" \
+            --function-name "$LAMBDA_FUNCTION" \
             --zip-file fileb://renderer.zip \
             --no-cli-pager > /dev/null
           aws lambda wait function-updated \
-            --function-name "${{ secrets.AWS_LAMBDA_FUNCTION }}"
+            --function-name "$LAMBDA_FUNCTION"
 
       # Scoped, not /*. The distribution serves other things; flushing all of it
       # on a chart edit would be needless origin load.
       - name: Invalidate the charts paths
         run: |
           PATHS="/charts/*"
-          if [ -n "${{ secrets.AWS_LAMBDA_FUNCTION }}" ]; then PATHS="$PATHS /render/*"; fi
+          if [ -n "$LAMBDA_FUNCTION" ]; then PATHS="$PATHS /render/*"; fi
           aws cloudfront create-invalidation \
             --distribution-id "${{ secrets.AWS_DISTRIBUTION_ID }}" \
             --paths $PATHS --no-cli-pager > /dev/null

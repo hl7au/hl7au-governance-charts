@@ -1,8 +1,6 @@
 # HL7 Australia — Technical Governance
 
-Single source of truth for the governance diagrams. Edit this file, run `python build.py`,
-and every SVG in `out/` is regenerated. Nothing else needs touching to add a person,
-a project, or a whole work group.
+Update this to update diagrams on web site
 
 ## Meta
 
@@ -15,7 +13,7 @@ a project, or a whole work group.
 Members of the Technical Steering Committee. `Name — Role`; the role is optional.
 
 - Tim Blake — Chair
-- Brett Jame Esler — Deputy Chair
+- Brett Esler — Deputy Chair
 - Kate Ebrill — HL7 AU Chair
 - Danielle Tavares-Rixon — Member Rep 1
 - Heath Frankel — Member Rep 2

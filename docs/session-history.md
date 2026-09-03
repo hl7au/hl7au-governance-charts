@@ -105,6 +105,18 @@ generator I can access via HTML".
 - `terraform validate` was never run — the sandbox that wrote it had no network for the
   Terraform binary. The HCL parses, but validate it before the first apply.
 
+## Deployment gotchas hit for real
+
+- **CloudFront origin path.** The `hl7austaging` distribution's S3 origin has origin path
+  `/site`, so `/charts/x.svg` is fetched from `s3://hl7auprojects/site/charts/x.svg`.
+  Publishing to `charts/` at the bucket root uploads fine and serves 404s.
+- **`secrets` is not a valid context in a step `if:`.** It fails the whole workflow file
+  at parse time, so nothing runs at all. Surface it as a job-level `env` and test that.
+- **The OIDC subject claim carries numeric org and repo IDs** —
+  `repo:hl7au@19850944/hl7au-governance-charts@1355314038:ref:refs/heads/main`, not the
+  documented `repo:owner/name:ref:...`. See `setup-github.md`; CloudTrail is how to see
+  the real value rather than guessing.
+
 ## Not done yet
 
 - `git init` and a first commit — deliberately left to Brett.

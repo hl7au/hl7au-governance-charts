@@ -38,25 +38,63 @@ GitHub authenticates to AWS by OIDC, so there are no long-lived keys to rotate. 
 account already has the GitHub OIDC provider (the permalinks setup uses this pattern),
 reuse it — one provider per account is the limit anyway.
 
-Trust policy — note `ref:refs/heads/main`, which stops a branch or a fork's PR from
-assuming the role:
+Trust policy. **Read the subject claim note below before copying this** — the obvious
+version does not work.
 
 ```json
 {
   "Version": "2012-10-17",
   "Statement": [{
     "Effect": "Allow",
-    "Principal": { "Federated": "arn:aws:iam::<account>:oidc-provider/token.actions.githubusercontent.com" },
+    "Principal": { "Federated": "arn:aws:iam::966489602583:oidc-provider/token.actions.githubusercontent.com" },
     "Action": "sts:AssumeRoleWithWebIdentity",
     "Condition": {
-      "StringEquals": {
-        "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
-        "token.actions.githubusercontent.com:sub": "repo:hl7au/hl7au-governance-charts:ref:refs/heads/main"
+      "StringEquals": { "token.actions.githubusercontent.com:aud": "sts.amazonaws.com" },
+      "StringLike": {
+        "token.actions.githubusercontent.com:sub": "repo:hl7au@*/hl7au-governance-charts@*:ref:refs/heads/main"
       }
     }
   }]
 }
 ```
+
+### The subject claim carries numeric IDs
+
+Every guide, including GitHub's own older docs, tells you to match this exactly:
+
+```
+repo:hl7au/hl7au-governance-charts:ref:refs/heads/main
+```
+
+The token this repo actually presents is:
+
+```
+repo:hl7au@19850944/hl7au-governance-charts@1355314038:ref:refs/heads/main
+```
+
+— the org and repository database IDs are appended to each name. A `StringEquals` on the
+classic string never matches, and the only symptom is:
+
+```
+Could not assume role with OIDC: Not authorized to perform sts:AssumeRoleWithWebIdentity
+```
+
+which is the same message you get for a role that does not exist, a wrong ARN, or a bad
+audience. Do not debug it by guessing. CloudTrail records the claim verbatim, in the
+region the workflow authenticates against:
+
+```bash
+aws cloudtrail lookup-events --region ap-southeast-2 \
+  --lookup-attributes AttributeKey=EventName,AttributeValue=AssumeRoleWithWebIdentity \
+  --max-results 5 --query 'Events[].Username'
+```
+
+The `StringLike` pattern above wildcards only the ID segments, so the repository and the
+branch stay pinned.
+
+**This affects other roles in the account.** `ghactions_publications_oidc` trusts
+`repo:hl7au/*`, which the ID-bearing subject also fails to match. If its workflows have
+stopped deploying, this is why; the pattern it needs is `repo:hl7au@*/*`.
 
 Permissions policy — exactly what the workflow does, nothing more:
 

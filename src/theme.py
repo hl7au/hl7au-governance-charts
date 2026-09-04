@@ -44,6 +44,7 @@ class Theme:
     fs_body: int = 23
     fs_role: int = 16
     fs_chip: int = 21
+    fs_accelerator: int = 15
 
     # Set by `variant()`; when true the background rectangle is omitted.
     transparent: bool = False

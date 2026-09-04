@@ -58,7 +58,12 @@ Everything the diagrams say comes from [`governance.md`](governance.md):
 #### Projects
 
 - AU Base FHIR IG
+- AU Core FHIR IG — Sparked
 ```
+
+A project may name the FHIR Accelerator running it after an em dash; it renders as a
+subtitle inside the project box. Accelerators are project-level only — work groups
+don't have one.
 
 Work groups render left to right in the order they appear. Add one and the columns
 re-space themselves; titles and labels shrink or wrap to fit.

@@ -24,10 +24,18 @@ class Member:
 
 
 @dataclass
+class Project:
+    name: str
+    # FHIR Accelerator running the project, e.g. "Sparked". Project-level only —
+    # work groups do not have one.
+    accelerator: str | None = None
+
+
+@dataclass
 class WorkGroup:
     name: str
     cochairs: list[str] = field(default_factory=list)
-    projects: list[str] = field(default_factory=list)
+    projects: list[Project] = field(default_factory=list)
 
 
 @dataclass
@@ -98,7 +106,10 @@ def parse(markdown: str) -> Model:
             if subsection == "cochairs":
                 current_wg.cochairs.append(item)
             elif subsection == "projects":
-                current_wg.projects.append(item)
+                parts = ROLE_SPLIT.split(item, maxsplit=1)
+                current_wg.projects.append(
+                    Project(parts[0].strip(),
+                            parts[1].strip() if len(parts) > 1 else None))
 
     return model
 

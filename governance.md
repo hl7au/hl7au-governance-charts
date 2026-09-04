@@ -28,6 +28,10 @@ Members of the Technical Steering Committee. `Name — Role`; the role is option
 
 Work groups appear left to right in the order they are listed here.
 
+A project may name the FHIR Accelerator running it, as `Project — Accelerator`. It shows
+as a subtitle inside the project box. Accelerators apply to projects only, not to work
+groups.
+
 ### FHIR Work Group
 
 #### Co-chairs
@@ -61,9 +65,9 @@ Work groups appear left to right in the order they are listed here.
 
 #### Projects
 
-- AU Core FHIR IG
-- AU Patient Summary FHIR IG
-- AU Encounter Record FHIR IG
+- AU Core FHIR IG — Sparked
+- AU Patient Summary FHIR IG — Sparked
+- AU Encounter Record FHIR IG — Sparked
 
 ### AU eRequesting Work Group
 

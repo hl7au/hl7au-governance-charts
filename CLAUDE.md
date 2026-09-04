@@ -34,6 +34,10 @@ also why the Lambda needs no layer.
 - **Layout scales with content.** Column count comes from the number of work groups;
   card titles shrink then wrap; project chips shrink before they overflow a card. Keep
   that property — test 3, 5 and 6 work groups before calling a layout change done.
+- **`Name — Value` is the one markdown idiom for an optional qualifier.** TSC members use
+  it for a role, projects for a FHIR Accelerator. Both parse through `ROLE_SPLIT` and
+  render as a smaller muted line under the name. Reuse it rather than inventing brackets
+  or a second separator.
 - **Adding a diagram:** a module in `src/diagrams/` exposing
   `render(model, theme, options) -> str`, registered in `src/diagrams/__init__.py`.
   It picks up `--only`, `--site`, the routes and every parameter for free.

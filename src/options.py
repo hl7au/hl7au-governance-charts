@@ -23,8 +23,7 @@ def slug(text: str) -> str:
 class Options:
     groups: tuple[str, ...] = ()      # slugs, in the order given; empty = all, as listed
     date: str | None = None           # overrides Meta date in the subtitle
-    title: str | None = None          # overrides the diagram title
-    header: bool = True               # draw the title/subtitle block
+    title: str | None = None          # accessible name for the image
     dark: bool = False
     width: int | None = None          # rendered width in px; viewBox is unchanged
     transparent: bool = False
@@ -56,7 +55,6 @@ class Options:
             groups=tuple(slug(g) for g in groups.split(",") if g.strip()) if groups else (),
             date=one("date"),
             title=one("title"),
-            header=flag("header", True),
             dark=flag("dark", False) or (one("theme") or "").lower() == "dark",
             width=parsed_width,
             transparent=flag("transparent", False)
@@ -67,6 +65,6 @@ class Options:
         """Stable string for ETag / cache filenames."""
         return "|".join([
             ",".join(self.groups), self.date or "", self.title or "",
-            str(self.header), str(self.dark), str(self.width or ""),
+            str(self.dark), str(self.width or ""),
             str(self.transparent),
         ])

@@ -19,16 +19,13 @@ def render(model: Model, theme: Theme | None = None,
     c = Canvas(t)
     columns = len(model.work_groups)
 
-    title = o.title or model.title
-    subtitle = (f"AU Technical Steering Committee and Work Group co-chairs · "
-                f"{o.date or model.date}").rstrip(" ·")
-    c.title_block(f"{title}. {subtitle}")
-    if o.header:
-        c.header(title, subtitle)
+    c.title_block(o.title or
+                  f"{model.title}. AU Technical Steering Committee and Work Group "
+                  f"co-chairs")
 
     # ---- AU-TSC band, members in a grid -----------------------------
     rows = -(-len(model.tsc) // TSC_COLUMNS)
-    tsc_y = 122 if o.header else t.margin
+    tsc_y = t.margin
     tsc_h = TSC_HEADER + 26 + rows * TSC_ROW + 18
     c.rect(t.margin, tsc_y, t.content_width, tsc_h, fill=t.tsc_fill, rx=12)
     c.top_rounded(t.margin, tsc_y, t.content_width, TSC_HEADER, fill=t.tsc_header)
@@ -61,4 +58,5 @@ def render(model: Model, theme: Theme | None = None,
             c.text(x + w / 2, top + pitch * (j + 0.5) + 8, name,
                    size=size, fill=t.ink, anchor="middle")
 
+    c.footer_date(o.date or model.date)
     return c.render(display_width=o.width)

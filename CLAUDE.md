@@ -27,6 +27,10 @@ also why the Lambda needs no layer.
 - **No colour or font size literals in `src/diagrams/`.** They live in `Theme`. A new
   colour is a new field on `Theme` *and* an entry in `DARK`, or dark mode silently keeps
   the light value.
+- **The diagrams carry no title or byline.** They are embedded in pages that already
+  have a heading. The only text outside the boxes is a small date stamp bottom right,
+  drawn by `Canvas.footer_date` into the margin the cards already leave clear. `title`
+  survives as the SVG's accessible name only — it is not drawn.
 - **A parameter is defined once, in `src/options.py`.** Both the static build and the
   HTTP endpoints construct `Options`, so they cannot drift. Adding one means: a field,
   parsing in `from_query`, use in the diagrams, a row in the README table and in

@@ -104,8 +104,6 @@ def index_html(base: str = "", static: bool = False) -> str:
             ("Co-chairs", "cochairs.svg", "the default"),
             ("Projects", "projects.svg", "the default"),
             ("Dark", "cochairs-dark.svg", "for a dark page"),
-            ("No header", "projects-bare.svg",
-             "drops the title block when the page already has a heading"),
         ]
         note = ("<p>These four are pre-built files. Anything else &mdash; a subset of "
                 "work groups, a custom width &mdash; needs the <code>/render/</code> "
@@ -115,8 +113,6 @@ def index_html(base: str = "", static: bool = False) -> str:
             ("Co-chairs", f"{base}/cochairs.svg", "the default"),
             ("Projects", f"{base}/projects.svg", "the default"),
             ("Dark", f"{base}/cochairs.svg?dark=1", "for a dark page"),
-            ("No header", f"{base}/projects.svg?header=0",
-             "drops the title block when the page already has a heading"),
             ("Selected groups", f"{base}/projects.svg?groups=fhir,aucore",
              "filters and re-orders the columns"),
         ]
@@ -156,14 +152,14 @@ def index_html(base: str = "", static: bool = False) -> str:
 <tr><td><code>groups</code></td><td><code>fhir,aucore,auerequesting,terminology</code></td>
     <td>Which work groups appear, and in what order</td></tr>
 <tr><td><code>dark</code></td><td><code>1</code> / <code>0</code></td><td>Dark palette</td></tr>
-<tr><td><code>header</code></td><td><code>1</code> / <code>0</code></td>
-    <td>Show or drop the title and subtitle</td></tr>
 <tr><td><code>w</code></td><td><code>320</code>–<code>4000</code></td>
     <td>Rendered width; the drawing scales, it does not reflow</td></tr>
 <tr><td><code>transparent</code></td><td><code>1</code> / <code>0</code></td>
     <td>Omit the background rectangle</td></tr>
-<tr><td><code>date</code>, <code>title</code></td><td>any text</td>
-    <td>Override the subtitle date and the title</td></tr>
+<tr><td><code>date</code></td><td>any text</td>
+    <td>Replaces the date stamp in the bottom right</td></tr>
+<tr><td><code>title</code></td><td>any text</td>
+    <td>Accessible name for the image (not drawn)</td></tr>
 </table>
 {rows}
 </body></html>

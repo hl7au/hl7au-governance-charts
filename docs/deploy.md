@@ -26,13 +26,11 @@ stay scoped to the prefix.
 
 ## Phase 1 — static charts (all that is needed to see images online)
 
-Eight files plus an index page, published by `.github/workflows/publish.yml`:
+Four files plus an index page, published by `.github/workflows/publish.yml`:
 
 ```
 /charts/cochairs.svg          /charts/projects.svg
 /charts/cochairs-dark.svg     /charts/projects-dark.svg
-/charts/cochairs-bare.svg     /charts/projects-bare.svg
-/charts/cochairs-bare-dark.svg /charts/projects-bare-dark.svg
 /charts/index.html
 ```
 

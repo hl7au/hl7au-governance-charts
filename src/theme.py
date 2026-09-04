@@ -37,8 +37,7 @@ class Theme:
     accents: tuple[str, ...] = ("#1f6f8b", "#2d7a5f", "#8a5a2b", "#6b4c93")
 
     # Type scale
-    fs_title: int = 34
-    fs_subtitle: int = 19
+    fs_date: int = 15
     fs_band: int = 27
     fs_card_title: int = 24
     fs_body: int = 23

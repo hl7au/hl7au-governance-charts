@@ -30,12 +30,13 @@ Python 3.10+. No dependencies.
 |---|---|---|
 | `groups` | `fhir,aucore,auerequesting,terminology` | Which work groups appear, and in what order |
 | `dark` | `1` / `0` | Dark palette |
-| `header` | `1` / `0` | Show or drop the title and subtitle |
 | `w` | `320`-`4000` | Rendered width; the drawing scales, it does not reflow |
 | `transparent` | `1` / `0` | Omit the background rectangle |
-| `date`, `title` | any text | Override the subtitle date and the title |
+| `date` | any text | Replaces the date stamp in the bottom right |
+| `title` | any text | Accessible name for the image (not drawn) |
 
-`header=0` is the one to reach for when embedding under a heading the page already has.
+The diagrams carry no title or byline — the embedding page supplies those. The only
+text outside the boxes is a small date stamp in the bottom right.
 
 ## Editing the content
 

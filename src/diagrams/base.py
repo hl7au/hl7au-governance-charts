@@ -85,10 +85,17 @@ class Canvas:
         self.add(f'<path d="{path}" stroke="{self.t.line}" stroke-width="3" fill="none"/>')
 
     # -- composites ----------------------------------------------------
-    def header(self, title: str, subtitle: str) -> None:
+    def footer_date(self, date: str) -> None:
+        """Small date stamp, bottom right, inside the canvas.
+
+        It sits in the bottom margin the cards already leave clear, so it costs
+        the diagram no drawing space.
+        """
+        if not date:
+            return
         t = self.t
-        self.text(t.margin, 66, title, size=t.fs_title, fill=t.ink, weight="700")
-        self.text(t.margin, 102, subtitle, size=t.fs_subtitle, fill=t.muted)
+        self.text(t.width - t.margin, t.height - 24, date,
+                  size=t.fs_date, fill=t.muted, anchor="end")
 
     def band(self, y: float, height: float, label: str, fill: str) -> None:
         """A full-width bar with a centred label — the Board and TSC rows."""

@@ -47,14 +47,10 @@ def render(model: Model, theme: Theme | None = None,
     c = Canvas(t)
     columns = len(model.work_groups)
 
-    title = o.title or "HL7 Australia — Work Groups and Projects"
-    subtitle = (f"Projects and implementation guides owned by each Work Group · "
-                f"{o.date or model.date}").rstrip(" ·")
-    c.title_block(f"{title}. {subtitle}")
-    if o.header:
-        c.header(title, subtitle)
+    c.title_block(o.title or "HL7 Australia — Work Groups and Projects. Projects and "
+                             "implementation guides owned by each Work Group")
 
-    board_y = 130 if o.header else t.margin
+    board_y = t.margin
     tsc_y = board_y + BAND_HEIGHT + BAND_GAP
     c.band(board_y, BAND_HEIGHT, model.board, t.board_fill)
     c.band(tsc_y, BAND_HEIGHT, model.tsc_title, t.tsc_fill)
@@ -92,4 +88,5 @@ def render(model: Model, theme: Theme | None = None,
                        project.accelerator, size=t.fs_accelerator, fill=t.muted,
                        anchor="middle")
 
+    c.footer_date(o.date or model.date)
     return c.render(display_width=o.width)

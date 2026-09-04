@@ -23,6 +23,7 @@ Members of the Technical Steering Committee. `Name — Role`; the role is option
 - Michael Wilson — AU Core WG Rep
 - Jim Steel — Terminology WG Rep
 - Angus Millar — eRequesting WG Rep
+- Test Entry -- Test WG Rep
 
 ## Work Groups
 
@@ -95,3 +96,15 @@ groups.
 #### Projects
 
 - AU Terminology FHIR IG
+
+### TEST Work Group
+
+#### Co-chairs
+
+- Test Entry 
+- Mickey Mouse
+
+#### Projects
+
+- AU Prime Number Calculator — Maths Inc
+- AU Another Meeting

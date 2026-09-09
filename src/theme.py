@@ -19,22 +19,22 @@ class Theme:
     font: str = "Segoe UI, Helvetica Neue, Arial, sans-serif"
 
     # Palette
-    bg: str = "#f7f9fb"
-    ink: str = "#12202e"
-    muted: str = "#5b6b7c"
-    line: str = "#bfcbd8"
-    board_fill: str = "#08203a"
-    tsc_fill: str = "#0f3557"
-    tsc_header: str = "#0b2942"
-    tsc_ink_muted: str = "#8fb3cf"
-    tsc_bullet: str = "#5fa8d3"
+    bg: str = "#f4f5f8"
+    ink: str = "#0c0c0c"
+    muted: str = "#5a6069"
+    line: str = "#d6d9df"
+    board_fill: str = "#0c0c0c"
+    tsc_fill: str = "#c72026"
+    tsc_header: str = "#a8171d"
+    tsc_ink_muted: str = "#fbe6e7"
+    tsc_bullet: str = "#ffffff"
     card_fill: str = "#ffffff"
-    card_header: str = "#e8eef4"
-    chip_fill: str = "#f4f8fb"
-    chip_border: str = "#dbe4ec"
+    card_header: str = "#eff1f5"
+    chip_fill: str = "#f7f8fa"
+    chip_border: str = "#e2e5ea"
 
     # One accent per work group, cycled in the order work groups are listed.
-    accents: tuple[str, ...] = ("#1f6f8b", "#2d7a5f", "#8a5a2b", "#6b4c93")
+    accents: tuple[str, ...] = ("#c72026", "#c72026", "#c72026", "#c72026")
 
     # Type scale
     fs_date: int = 15
@@ -70,18 +70,18 @@ class Theme:
 # Dark palette — same hues, re-weighted so the cards sit above the page
 # rather than glowing on it. Accents lift because they carry less area here.
 DARK = dict(
-    bg="#0d1520",
-    ink="#e8eff6",
-    muted="#8fa3b6",
-    line="#2b3c4e",
-    board_fill="#182b3f",
-    tsc_fill="#22456a",
-    tsc_header="#1a3552",
-    tsc_ink_muted="#9dbdd6",
-    tsc_bullet="#6fb6e0",
-    card_fill="#16212e",
-    card_header="#1e2c3b",
-    chip_fill="#1b2836",
-    chip_border="#2c3d4f",
-    accents=("#4ea3c4", "#5cbc92", "#cf9558", "#a98ed6"),
+    bg="#101114",
+    ink="#f0f1f3",
+    muted="#9aa1ab",
+    line="#2f333a",
+    board_fill="#000000",
+    tsc_fill="#b81d23",
+    tsc_header="#8f1519",
+    tsc_ink_muted="#f7d2d4",
+    tsc_bullet="#ffffff",
+    card_fill="#1a1c20",
+    card_header="#23262b",
+    chip_fill="#1f2228",
+    chip_border="#31353d",
+    accents=("#e5424a", "#e5424a", "#e5424a", "#e5424a"),
 )

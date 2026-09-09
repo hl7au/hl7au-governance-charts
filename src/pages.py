@@ -165,9 +165,12 @@ a {{ color: var(--accent); }}
 .cta {{ display: inline-block; margin-top: .75rem; padding: .5rem .9rem;
         border-radius: 8px; background: var(--band); color: #fff;
         text-decoration: none; font-weight: 600; }}
-.cta.disabled {{ background: var(--chip); color: var(--muted);
-                 border: 1px solid var(--chipline); cursor: not-allowed;
-                 pointer-events: none; }}
+/* Eligibility and sign-up are only actionable while a ballot is live, and a
+   tentative cycle has nothing settled to show but its dates. */
+details[data-tone="completed"] .voter-info,
+details[data-tone="past"] .voter-info,
+details[data-tone="future"] .voter-info,
+details[data-tone="future"] .ballot-content {{ display: none; }}
 footer {{ margin-top: 2.5rem; text-align: right; color: var(--muted); font-size: .8rem; }}
 @media (max-width: 34rem) {{
   dl.dates {{ grid-template-columns: 1fr; gap: 0; }}
@@ -277,8 +280,10 @@ def _ballot_html(b, events: Events, today: date, tone: str, expanded: bool) -> s
       <tbody>
 {rows}
       </tbody></table>""" if b.items else f"<p>{_no_items(status)}</p>"
-    content = f"""    <h3>Ballot content</h3>
-    {table}"""
+    content = f"""    <div class="ballot-content">
+    <h3>Ballot content</h3>
+    {table}
+    </div>"""
 
     dates = "\n".join(
         f'      <dt class="r-{state}" data-start="{start.isoformat() if start else ""}"'
@@ -312,28 +317,15 @@ def _ballot_html(b, events: Events, today: date, tone: str, expanded: bool) -> s
         if entitlements else ""
 
     signup = ""
-    if b.signup_link and status != "closed":
-        # Live until the ballot itself is over; the script re-checks on load so a
-        # stale build cannot leave a finished ballot's button clickable.
-        if status == "closed":
-            button = ('<span class="cta disabled" aria-disabled="true" '
-                      f'data-href="{esc(b.signup_link)}">Sign up to ballot</span>')
-            note = "Sign-up closed"
-        else:
-            button = f'<a class="cta" href="{esc(b.signup_link)}">Sign up to ballot</a>'
-            note = f'Sign-up closes {format_date(b.date_for("signup_closes"))}'
-        signup = (f'    <p>{button}<br><span class="window">{esc(note)}</span></p>')
-
-    # Once voting has closed there is nothing a reader can do about eligibility
-    # or sign-up, so the whole voter-facing block goes rather than sitting there
-    # inviting action that is no longer possible.
-    if status == "closed":
-        requirements, signup = "", ""
-    elif requirements:
+    if b.signup_link:
+        signup = (f'    <p><a class="cta" href="{esc(b.signup_link)}">Sign up to '
+                  f'ballot</a><br><span class="window">Sign-up closes '
+                  f'{esc(format_date(b.date_for("signup_closes")))}</span></p>')
+    if requirements:
         signup += "\n    </div>"
-    
 
-    return f"""  <details{' open' if expanded else ''}
+
+    return f"""  <details{' open' if expanded else ''} data-tone="{tone}"
            data-opens="{opens.isoformat() if opens else ''}"
            data-closes="{closes.isoformat() if closes else ''}">
     <summary class="t-{tone}">
@@ -430,12 +422,7 @@ SCRIPT = """
       if (dt.nextElementSibling) dt.nextElementSibling.className = 'r-' + state;
     });
 
-    if (status === 'closed') {
-      var info = d.querySelector('.voter-info');
-      if (info) info.remove();
-      var cta = d.querySelector('.cta');
-      if (cta && cta.parentNode) cta.parentNode.remove();
-    }
+    d.dataset.tone = tone[i];
   });
 })();
 """

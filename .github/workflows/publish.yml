@@ -74,6 +74,10 @@ jobs:
             --exclude "*" --include "*.html" \
             --content-type "text/html; charset=utf-8" \
             --cache-control "public, max-age=300"
+          aws s3 sync site/charts/ "s3://${{ secrets.AWS_BUCKET }}/$S3_PREFIX/" \
+            --exclude "*" --include "*.js" \
+            --content-type "application/javascript; charset=utf-8" \
+            --cache-control "public, max-age=300, s-maxage=86400"
 
       # Optional second phase: only runs once a /render/* Lambda exists.
       # The function bundles governance.md, so it has to be refreshed too.

@@ -7,6 +7,8 @@ are re-declared under `prefers-color-scheme: dark`.
 """
 from __future__ import annotations
 
+import json
+
 from datetime import date
 
 from .events import Events, format_date, format_range
@@ -96,6 +98,7 @@ def _css(t: Theme) -> str:
   }}
 }}
 * {{ box-sizing: border-box; }}
+body.embed {{ padding: .25rem 0 .5rem; max-width: none; background: transparent; }}
 body {{
   margin: 0 auto; padding: 2.5rem 1.25rem 3rem; max-width: 62rem;
   font: 16px/1.55 "Segoe UI", "Helvetica Neue", Arial, sans-serif;
@@ -171,6 +174,61 @@ footer {{ margin-top: 2.5rem; text-align: right; color: var(--muted); font-size:
   dl.dates dt {{ border-radius: 6px 6px 0 0; padding-bottom: 0; }}
   dl.dates dd {{ border-radius: 0 0 6px 6px; margin-bottom: .4rem; }}
 }}"""
+
+
+def scope_css(css: str, scope: str, keep_dark: bool = True) -> str:
+    """Rewrite a stylesheet so every rule applies only inside `scope`.
+
+    Injected into someone else's page, unscoped rules on `body`, `table` or `h3`
+    would restyle their content. `:root` and `body` become the scope element
+    itself, so the custom properties and the page-level rules still land.
+
+    `keep_dark=False` drops the dark-scheme block: the host page (Confluence)
+    has no dark mode, so honouring the reader's OS preference would put a dark
+    panel on a white page.
+    """
+    out, i, n = [], 0, len(css)
+    while i < n:
+        brace = css.find("{", i)
+        if brace == -1:
+            out.append(css[i:])
+            break
+        head = css[i:brace].strip()
+        if head.startswith("@"):
+            depth, j = 1, brace + 1
+            while j < n and depth:
+                if css[j] == "{":
+                    depth += 1
+                elif css[j] == "}":
+                    depth -= 1
+                j += 1
+            inner = css[brace + 1:j - 1]
+            if head.startswith("@media") and "prefers-color-scheme: dark" in head:
+                if keep_dark:
+                    out.append(f"{head} {{{scope_css(inner, scope, keep_dark)}}}\n")
+            else:
+                out.append(f"{head} {{{scope_css(inner, scope, keep_dark)}}}\n")
+            i = j
+            continue
+        close = css.find("}", brace)
+        body = css[brace + 1:close]
+        selectors = []
+        for sel in head.split(","):
+            sel = sel.strip()
+            if not sel:
+                continue
+            if sel.startswith(":root") or sel == "body":
+                selectors.append(scope + sel[len("body"):] if sel == "body"
+                                 else scope + sel[len(":root"):])
+            elif sel.startswith("body"):
+                selectors.append(scope + sel[len("body"):])
+            elif sel == "*":
+                selectors.append(f"{scope} *")
+            else:
+                selectors.append(f"{scope} {sel}")
+        out.append(f"{', '.join(selectors)} {{{body}}}\n")
+        i = close + 1
+    return "".join(out)
 
 
 def _no_items(status: str) -> str:
@@ -383,28 +441,121 @@ SCRIPT = """
 """
 
 
+def ballot_list(events: Events, today: date) -> str:
+    """Just the ballots, as markup — shared by the standalone page and the
+    embeddable widget."""
+    shown = presentation(events, today)
+    return "\n".join(_ballot_html(b, events, today, *shown[id(b)])
+                      for b in events.ordered())
+
+
 def render_ballots(events: Events, theme: Theme | None = None,
-                   today: date | None = None) -> str:
+                   today: date | None = None, embed: bool = False) -> str:
     t = theme or Theme()
     today = today or date.today()
-    shown = presentation(events, today)
-    ballots = "\n".join(_ballot_html(b, events, today, *shown[id(b)])
-                        for b in events.ordered())
+    # Embedded in a page that already has its own title, the heading and the
+    # outer padding are duplication — and the host sets the width.
+    heading = "" if embed else (
+        f"<h1>{esc(events.title)}</h1>\n"
+        '<p class="lede">The current ballot and the next one are shown expanded. '
+        "Select any other to see its detail.</p>")
+    body_class = ' class="embed"' if embed else ""
+    resize = RESIZE_SCRIPT if embed else ""
+
+    ballots = ballot_list(events, today)
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{esc(events.title)}</title>
 <style>
 {_css(t)}
-</style></head><body>
-<h1>{esc(events.title)}</h1>
-<p class="lede">The current ballot and the next one are shown expanded. Select any other
-to see its detail.</p>
+</style></head><body{body_class}>
+{heading}
 {ballots}
 <footer>Generated {esc(format_date(today))}</footer>
-<script>{SCRIPT}</script>
+<script>{SCRIPT}{resize}</script>
 </body></html>
 """
 
 
-PAGES = {"ballots": ("ballots.html", render_ballots)}
+# Cross-origin hosts (Confluence) cannot measure this frame, so it reports its
+# own height on load, on every toggle and whenever the layout reflows.
+RESIZE_SCRIPT = """
+(function () {
+  function send() {
+    var h = Math.ceil(document.documentElement.getBoundingClientRect().height);
+    parent.postMessage({ type: 'hl7au-charts:height', height: h }, '*');
+  }
+  addEventListener('load', send);
+  addEventListener('resize', send);
+  document.addEventListener('toggle', send, true);
+  if (window.ResizeObserver) new ResizeObserver(send).observe(document.body);
+  send();
+})();
+"""
+
+def render_ballots_js(events: Events, theme: Theme | None = None,
+                      today: date | None = None) -> str:
+    """A self-contained script that injects the ballot list into a host page.
+
+    Delivered as JavaScript rather than fetched HTML on purpose: a cross-origin
+    <script> needs no CORS header, so the host needs nothing configured and this
+    site needs no extra response headers. The markup travels inside the file.
+
+    Styles are scoped to the injected container so they cannot restyle the host,
+    and the dark-scheme block is dropped — the host page is light regardless of
+    the reader's OS setting.
+    """
+    t = theme or Theme()
+    today = today or date.today()
+    # The page-level rules become container rules under scoping, which would
+    # paint a grey slab across the host page. The container is a block of
+    # content, not a page: no background, no padding, no width of its own.
+    # Two defences against the host's own stylesheet. The page-level rules
+    # become container rules under scoping and would paint a slab across the
+    # host page; and a host that styles bare `table`/`td` (Confluence does)
+    # would otherwise win on our cells, which only set padding and a bottom
+    # rule. State the cell background and border outright.
+    css = scope_css(_css(t), ".hl7au-ballots", keep_dark=False) + """
+.hl7au-ballots { background: transparent; padding: 0; margin: 0; max-width: none; }
+.hl7au-ballots table { background: transparent; border: 0; }
+.hl7au-ballots th, .hl7au-ballots td {
+  background: transparent; border: 0; border-bottom: 1px solid var(--line); }
+.hl7au-ballots tbody tr:last-child td { border-bottom: 0; }
+.hl7au-ballots dl.dates dt, .hl7au-ballots dl.dates dd { border: 0; }
+"""
+    html = (ballot_list(events, today)
+            + f'\n<footer>Generated {esc(format_date(today))}</footer>')
+    return f"""/* HL7 AU ballot announcements — generated, do not edit.
+   Usage:  <div id="hl7au-ballots"></div>
+           <script src="https://apps.hl7.org.au/charts/ballots.js"></script> */
+(function () {{
+  var CSS = {json.dumps(css)};
+  var HTML = {json.dumps(html)};
+  var here = document.currentScript;
+  var mount = document.getElementById("hl7au-ballots") || (here && here.parentNode);
+  if (!mount) return;
+
+  if (!document.getElementById("hl7au-ballots-css")) {{
+    var style = document.createElement("style");
+    style.id = "hl7au-ballots-css";
+    style.textContent = CSS;
+    document.head.appendChild(style);
+  }}
+
+  var root = document.createElement("div");
+  root.className = "hl7au-ballots";
+  root.innerHTML = HTML;
+  if (here && here.parentNode === mount) mount.insertBefore(root, here);
+  else mount.appendChild(root);
+}})();
+{SCRIPT}"""
+
+
+PAGES = {
+    "ballots": ("ballots.html", render_ballots),
+    "ballots-embed": ("ballots-embed.html",
+                      lambda events, theme=None, today=None:
+                          render_ballots(events, theme, today, embed=True)),
+    "ballots-js": ("ballots.js", render_ballots_js),
+}

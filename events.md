@@ -53,6 +53,13 @@ by stating it explicitly when reality differs from the standard timeline, or set
 
 Every date below is transcribed from the ballot's Confluence announcement page.
 
+### Ballot 2027-08
+
+- voting opens: 2027-08-04
+- connectathon: 2027-08-24 to 2027-08-26
+
+#### Items
+
 ### Ballot 2027-03
 
 - voting opens: 2027-03-03

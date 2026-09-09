@@ -26,12 +26,12 @@ stay scoped to the prefix.
 
 ## Phase 1 — static charts (all that is needed to see images online)
 
-Four files plus an index page, published by `.github/workflows/publish.yml`:
+Four diagrams, the ballot page and an index, published by `.github/workflows/publish.yml`:
 
 ```
 /charts/cochairs.svg          /charts/projects.svg
 /charts/cochairs-dark.svg     /charts/projects-dark.svg
-/charts/index.html
+/charts/ballots.html          /charts/index.html
 ```
 
 Embed one with a plain tag — they send `Access-Control-Allow-Origin: *`:

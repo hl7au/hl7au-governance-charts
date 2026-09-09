@@ -12,7 +12,9 @@ from typing import Mapping, Sequence
 from urllib.parse import parse_qs, urlparse
 
 from .diagrams import DIAGRAMS
+from .events import Events, parse_file as parse_events
 from .options import Options
+from .pages import PAGES
 from .parse import Model, parse_file, select
 from .theme import Theme
 
@@ -48,10 +50,13 @@ class Response:
 class Renderer:
     """Holds the parsed model. Reloads when governance.md changes on disk."""
 
-    def __init__(self, source: str | Path):
+    def __init__(self, source: str | Path, events: str | Path | None = None):
         self.source = Path(source)
+        self.events_source = Path(events) if events else self.source.parent / "events.md"
         self._mtime: float | None = None
         self._model: Model | None = None
+        self._events_mtime: float | None = None
+        self._events: Events | None = None
 
     @property
     def model(self) -> Model:
@@ -59,6 +64,15 @@ class Renderer:
         if self._model is None or mtime != self._mtime:
             self._model, self._mtime = parse_file(self.source), mtime
         return self._model
+
+    @property
+    def events(self) -> Events | None:
+        if not self.events_source.exists():
+            return None
+        mtime = self.events_source.stat().st_mtime
+        if self._events is None or mtime != self._events_mtime:
+            self._events, self._events_mtime = parse_events(self.events_source), mtime
+        return self._events
 
     def svg(self, diagram: str, options: Options) -> str:
         _, render = DIAGRAMS[diagram]
@@ -68,6 +82,15 @@ class Renderer:
                *, if_none_match: str | None = None) -> Response:
         name = _diagram_name(path)
         params = parse_qs(query) if isinstance(query, str) else query
+
+        page = _page_name(path)
+        if page is not None:
+            events = self.events
+            if events is None:
+                return Response(404, "text/plain; charset=utf-8",
+                                "No events.md — nothing to show here.\n")
+            _, render = PAGES[page]
+            return Response(200, HTML_TYPE, render(events, Theme()))
 
         if name is None:
             if path.rstrip("/") in ("", "/index.html"):
@@ -91,6 +114,14 @@ def _diagram_name(path: str) -> str | None:
     if stem.endswith(".svg"):
         stem = stem[:-4]
     return stem if stem in DIAGRAMS else None
+
+
+def _page_name(path: str) -> str | None:
+    """`/charts/ballots.html` -> `ballots`."""
+    stem = urlparse(path).path.rstrip("/").rsplit("/", 1)[-1]
+    if stem.endswith(".html"):
+        stem = stem[:-5]
+    return stem if stem in PAGES else None
 
 
 def index_html(base: str = "", static: bool = False) -> str:
@@ -145,7 +176,8 @@ def index_html(base: str = "", static: bool = False) -> str:
 </style></head><body>
 <h1>HL7 AU governance charts</h1>
 <p class="lede">SVG endpoints for embedding in a page. Generated from
-<code>governance.md</code>.</p>
+<code>governance.md</code>. Ballot announcements are a page of their own:
+<a href="ballots.html">ballots.html</a>.</p>
 {note}
 <table>
 <tr><th>Parameter</th><th>Values</th><th>Effect</th></tr>

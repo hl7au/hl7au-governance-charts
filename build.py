@@ -15,7 +15,9 @@ import argparse
 from pathlib import Path
 
 from src.diagrams import DIAGRAMS
+from src.events import parse_file as parse_events
 from src.options import Options
+from src.pages import PAGES
 from src.parse import parse_file
 from src.service import index_html
 from src.theme import Theme
@@ -39,6 +41,7 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--source", default=ROOT / "governance.md", type=Path)
+    ap.add_argument("--events", default=ROOT / "events.md", type=Path)
     ap.add_argument("--out", default=ROOT / "out", type=Path)
     ap.add_argument("--site", type=Path,
                     help="also write a publishable tree (charts/ + index.html) here")
@@ -56,14 +59,22 @@ def main() -> None:
         filename, render = DIAGRAMS[key]
         print(f"{key:10s} -> {write(args.out / filename, render(model, theme))}")
 
+    if args.events.exists():
+        events = parse_events(args.events)
+        for key, (filename, render) in PAGES.items():
+            print(f"{key:10s} -> {write(args.out / filename, render(events, theme))}")
+
     if args.site:
         for key in names:
             _, render = DIAGRAMS[key]
             for suffix, options in SITE_VARIANTS.items():
                 write(args.site / "charts" / f"{key}{suffix}.svg",
                       render(model, theme, options))
+        if args.events.exists():
+            for key, (filename, render) in PAGES.items():
+                write(args.site / "charts" / filename, render(events, theme))
         write(args.site / "charts" / "index.html", index_html(static=True))
-        count = len(names) * len(SITE_VARIANTS) + 1
+        count = len(names) * len(SITE_VARIANTS) + 1 + (len(PAGES) if args.events.exists() else 0)
         print(f"site       -> {args.site} ({count} files)")
 
     print(f"\n{len(model.work_groups)} work groups · {len(model.tsc)} TSC members · "

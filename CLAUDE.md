@@ -5,7 +5,8 @@ files, from a local server, or from CloudFront for embedding in web pages.
 `governance.md` is the only file anyone should need to edit to change what they say.
 
 ```
-governance.md           the content — TSC members, work groups, co-chairs, projects
+governance.md           diagram content — TSC members, work groups, co-chairs, projects
+events.md               ballot announcements — one date per ballot, the rest derived
 build.py                CLI: files into out/, or a publishable tree with --site
 serve.py                local dev server (stdlib http.server)
 lambda_function.py      AWS Lambda entry point for the /render/* endpoint
@@ -15,6 +16,8 @@ src/service.py          routing, caching headers, ETag, the index page
 src/theme.py            palette (light and dark), type scale, canvas geometry
 src/diagrams/base.py    SVG primitives: canvas, bands, cards, connectors, text fitting
 src/diagrams/*.py       one module per diagram
+src/events.py           events.md -> ballots, with the derived-date rules
+src/pages.py            HTML views (the ballot page) — anything that must collapse
 out/, site/             generated (gitignored — regenerate, don't edit)
 ```
 
@@ -42,6 +45,34 @@ also why the Lambda needs no layer.
   it for a role, projects for a FHIR Accelerator. Both parse through `ROLE_SPLIT` and
   render as a smaller muted line under the name. Reuse it rather than inventing brackets
   or a second separator.
+- **SVG for diagrams, HTML for anything interactive.** A ballot list has to collapse, so
+  it is a page in `src/pages.py`, not a diagram. Both draw their palette from `Theme`, so
+  they stay one visual system.
+- **Ballot dates are derived, not transcribed.** `OFFSETS` in `src/events.py` encodes
+  *Process: HL7 AU Balloting*; a ballot states its voting open date and the rest follows.
+  Verified against Ballot 2026-08, which matches to the day. If a published ballot ever
+  disagrees, pin that date in `events.md` rather than changing the offsets — the offsets
+  are the process, the pin is the exception.
+- **Header tone carries the state, and the label reads off the tone.** Green OPEN for a
+  ballot running, blue CLOSED for the one that just finished, orange NEXT for the one
+  coming up, grey CLOSED for older ballots, and the card background with TENTATIVE for
+  anything beyond the next. `presentation()` in `src/pages.py` decides it; the script
+  re-derives the same thing on load. Change one and change the other.
+- **Ballot item fields are matched by shape, not position.** A version
+  (`3.0.0-ballot1`) and a URL are recognised wherever they appear in the bullet; the
+  remaining parts stay ordered name, type, work group. It keeps a five-field bullet
+  readable and lets either optional field be omitted.
+- **Published links are derived from the version, not typed.** `Events.published_url()`
+  joins the publication base, the IG's path segment and the version; the longest matching
+  name prefix wins so "AU Core" is not shadowed. The link is withheld until the ballot's
+  published date, because the build does not exist before then. Verified against the live
+  site: `/fhir/core/3.0.0-ballot1` and `/fhir/7.0.0-ballot1` both resolve.
+- **Key-date rows are tinted by where today sits in them.** Grey before, light green
+  during, light blue after; a single date is a one-day period, so it goes green only on
+  the day. `row_state()` decides it and the script re-derives it on load.
+- **Status is recomputed in the browser.** The build stamps a status, then a small inline
+  script re-evaluates it from `data-opens`/`data-closes` on load, so a page built weeks
+  earlier still reads correctly. Without JavaScript the build-time status stands.
 - **Adding a diagram:** a module in `src/diagrams/` exposing
   `render(model, theme, options) -> str`, registered in `src/diagrams/__init__.py`.
   It picks up `--only`, `--site`, the routes and every parameter for free.

@@ -8,6 +8,7 @@ on:
     branches: [main]
     paths:
       - governance.md
+      - events.md
       - src/**
       - build.py
       - lambda_function.py
@@ -69,8 +70,8 @@ jobs:
             --exclude "*" --include "*.svg" \
             --content-type "image/svg+xml; charset=utf-8" \
             --cache-control "public, max-age=300, s-maxage=86400"
-          aws s3 cp site/charts/index.html \
-            "s3://${{ secrets.AWS_BUCKET }}/$S3_PREFIX/index.html" \
+          aws s3 sync site/charts/ "s3://${{ secrets.AWS_BUCKET }}/$S3_PREFIX/" \
+            --exclude "*" --include "*.html" \
             --content-type "text/html; charset=utf-8" \
             --cache-control "public, max-age=300"
 

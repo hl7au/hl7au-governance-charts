@@ -17,6 +17,20 @@ with a plain `<img>`.
 <img src="https://apps.hl7.org.au/render/cochairs.svg?groups=fhir,aucore&dark=1" alt="...">
 ```
 
+## Published charts
+
+| Chart | URL |
+|---|---|
+| Co-chairs | https://apps.hl7.org.au/charts/cochairs.svg |
+| Projects | https://apps.hl7.org.au/charts/projects.svg |
+| Governance (the Board) | https://apps.hl7.org.au/charts/governance.svg |
+| Ballots | https://apps.hl7.org.au/charts/ballots.html |
+
+Every SVG is also published with `-dark`, `-transparent` and `-dark-transparent` before
+`.svg`, e.g. `governance-transparent.svg` for a page with its own background. The
+transparent versions drop only the page background; cards and bands stay solid. Other
+combinations — a subset of work groups, a custom width — need `/render/*`.
+
 ## Use
 
 ```bash
@@ -39,11 +53,6 @@ Python 3.10+. No dependencies.
 | `date` | any text | Replaces the date stamp in the bottom right |
 | `title` | any text | Accessible name for the image (not drawn) |
 
-The published `/charts/` files are pre-built with `dark` and `transparent` applied:
-`projects.svg`, `projects-dark.svg`, `projects-transparent.svg`,
-`projects-dark-transparent.svg`, and the same for each diagram. Other combinations need
-`/render/*`.
-
 The diagrams carry no title or byline — the embedding page supplies those. The only
 text outside the boxes is a small date stamp in the bottom right.
 
@@ -55,6 +64,11 @@ The diagrams come from [`governance.md`](governance.md), the ballot page from
 ### governance.md
 
 ```markdown
+## Board
+
+- Kate Ebrill — HL7 Australia Chair
+- Isobel Frean — Company Secretary
+
 ## AU-TSC
 
 - Tim Blake — Chair
@@ -73,6 +87,10 @@ The diagrams come from [`governance.md`](governance.md), the ballot page from
 - AU Base FHIR IG
 - AU Core FHIR IG — Sparked
 ```
+
+`## Board` is drawn only on the governance diagram, `## AU-TSC` only on the co-chairs
+diagram. Both list one person per bullet as `Name — Role`; the role is optional and
+renders as a smaller line under the name. Board members lay out four to a row.
 
 A project may name the FHIR Accelerator running it after an em dash; it renders as a
 subtitle inside the project box. Accelerators are project-level only — work groups

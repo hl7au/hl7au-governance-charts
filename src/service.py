@@ -135,8 +135,12 @@ def index_html(base: str = "", static: bool = False) -> str:
             ("Co-chairs", "cochairs.svg", "the default"),
             ("Projects", "projects.svg", "the default"),
             ("Dark", "cochairs-dark.svg", "for a dark page"),
+            ("Transparent", "projects-transparent.svg",
+             "no background, for a page with its own; also <code>-dark-transparent</code>"),
         ]
-        note = ("<p>These four are pre-built files. Anything else &mdash; a subset of "
+        note = ("<p>Every diagram is pre-built in four variants: <code>name.svg</code>, "
+                "<code>-dark</code>, <code>-transparent</code> and "
+                "<code>-dark-transparent</code>. Anything else &mdash; a subset of "
                 "work groups, a custom width &mdash; needs the <code>/render/</code> "
                 "endpoint.</p>")
     else:

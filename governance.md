@@ -8,6 +8,20 @@ Update this to update diagrams on web site
 - board: HL7 Australia Board
 - tsc-title: AU Technical Steering Committee (AU-TSC)
 
+## Board
+
+Members of the HL7 Australia Board, as published on hl7.au for 2025/26.
+`Name — Role`; the role is optional.
+
+- Kate Ebrill — HL7 Australia Chair
+- Isobel Frean — Company Secretary
+- Gil Carter — Treasurer
+- Andy Bond — General Director
+- Reuben Daniels — General Director
+- Leigh Donoghue — General Director
+- J. Richard Dixon Hughes — General Director
+- Peter Sprivulis — General Director
+
 ## AU-TSC
 
 Members of the Technical Steering Committee. `Name — Role`; the role is optional.

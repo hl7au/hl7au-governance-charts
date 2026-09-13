@@ -1,9 +1,11 @@
 # HL7 AU governance charts
 
-Two 16:9 diagrams and a ballot announcements page, generated from markdown:
+Three 16:9 diagrams and a ballot announcements page, generated from markdown:
 
 - **Co-chairs** — AU Technical Steering Committee membership above each work group and its co-chairs.
 - **Projects** — the HL7 Australia Board and AU-TSC above each work group's projects and implementation guides.
+- **Governance** — the Board and its members, then the AU-TSC and the work groups: the
+  structure, without membership at the lower levels.
 - **Ballots** — an announcements page, newest first. The running ballot and the next one
   are expanded and colour-coded (OPEN, CLOSED, NEXT, TENTATIVE); the rest collapse.
 
@@ -36,6 +38,11 @@ Python 3.10+. No dependencies.
 | `transparent` | `1` / `0` | Omit the background rectangle |
 | `date` | any text | Replaces the date stamp in the bottom right |
 | `title` | any text | Accessible name for the image (not drawn) |
+
+The published `/charts/` files are pre-built with `dark` and `transparent` applied:
+`projects.svg`, `projects-dark.svg`, `projects-transparent.svg`,
+`projects-dark-transparent.svg`, and the same for each diagram. Other combinations need
+`/render/*`.
 
 The diagrams carry no title or byline — the embedding page supplies those. The only
 text outside the boxes is a small date stamp in the bottom right.

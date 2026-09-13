@@ -5,7 +5,7 @@ files, from a local server, or from CloudFront for embedding in web pages.
 `governance.md` is the only file anyone should need to edit to change what they say.
 
 ```
-governance.md           diagram content — TSC members, work groups, co-chairs, projects
+governance.md           diagram content — Board, TSC, work groups, co-chairs, projects
 events.md               ballot announcements — one date per ballot, the rest derived
 build.py                CLI: files into out/, or a publishable tree with --site
 serve.py                local dev server (stdlib http.server)
@@ -45,6 +45,10 @@ also why the Lambda needs no layer.
   it for a role, projects for a FHIR Accelerator. Both parse through `ROLE_SPLIT` and
   render as a smaller muted line under the name. Reuse it rather than inventing brackets
   or a second separator.
+- **Each diagram answers one question.** Co-chairs: who is on what. Projects: what each
+  work group owns. Governance: who governs what — so it names the Board's members and
+  deliberately leaves the levels below unpopulated rather than repeating the co-chairs
+  view at a smaller size.
 - **SVG for diagrams, HTML for anything interactive.** A ballot list has to collapse, so
   it is a page in `src/pages.py`, not a diagram. Both draw their palette from `Theme`, so
   they stay one visual system.

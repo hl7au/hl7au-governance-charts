@@ -28,6 +28,8 @@ ROOT = Path(__file__).parent
 SITE_VARIANTS: dict[str, Options] = {
     "": Options(),
     "-dark": Options(dark=True),
+    "-transparent": Options(transparent=True),
+    "-dark-transparent": Options(dark=True, transparent=True),
 }
 
 

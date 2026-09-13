@@ -26,13 +26,19 @@ stay scoped to the prefix.
 
 ## Phase 1 — static charts (all that is needed to see images online)
 
-Four diagrams, the ballot page and an index, published by `.github/workflows/publish.yml`:
+Each diagram in four variants, the ballot page and an index, published by
+`.github/workflows/publish.yml`:
 
 ```
-/charts/cochairs.svg          /charts/projects.svg
-/charts/cochairs-dark.svg     /charts/projects-dark.svg
-/charts/ballots.html          /charts/index.html
+/charts/cochairs.svg                /charts/governance.svg                /charts/projects.svg
+/charts/cochairs-dark.svg           /charts/governance-dark.svg           /charts/projects-dark.svg
+/charts/cochairs-transparent.svg    /charts/governance-transparent.svg    /charts/projects-transparent.svg
+/charts/cochairs-dark-transparent.svg  /charts/governance-dark-transparent.svg  /charts/projects-dark-transparent.svg
+/charts/ballots.html                /charts/index.html
 ```
+
+The transparent variants omit the background rectangle only; cards and bands stay
+opaque, so they sit on any page colour.
 
 Embed one with a plain tag — they send `Access-Control-Allow-Origin: *`:
 

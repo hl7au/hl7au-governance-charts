@@ -42,6 +42,7 @@ class WorkGroup:
 class Model:
     title: str = "HL7 Australia"
     meta: dict[str, str] = field(default_factory=dict)
+    board_members: list[Member] = field(default_factory=list)
     tsc: list[Member] = field(default_factory=list)
     work_groups: list[WorkGroup] = field(default_factory=list)
 
@@ -77,6 +78,7 @@ def parse(markdown: str) -> Model:
             elif level == 2:
                 key = _slug(text)
                 section = {"meta": "meta", "autsc": "tsc", "tsc": "tsc",
+                           "board": "board", "boardmembers": "board",
                            "workgroups": "workgroups"}.get(key)
                 current_wg, subsection = None, None
             elif level == 3 and section == "workgroups":
@@ -98,10 +100,11 @@ def parse(markdown: str) -> Model:
             if ":" in item:
                 key, value = item.split(":", 1)
                 model.meta[key.strip().lower()] = value.strip()
-        elif section == "tsc":
+        elif section in ("tsc", "board"):
             parts = ROLE_SPLIT.split(item, maxsplit=1)
-            model.tsc.append(Member(parts[0].strip(),
-                                    parts[1].strip() if len(parts) > 1 else None))
+            member = Member(parts[0].strip(),
+                            parts[1].strip() if len(parts) > 1 else None)
+            (model.tsc if section == "tsc" else model.board_members).append(member)
         elif section == "workgroups" and current_wg is not None:
             if subsection == "cochairs":
                 current_wg.cochairs.append(item)
@@ -124,7 +127,8 @@ def select(model: Model, slugs: Sequence[str]) -> Model:
     chosen = [index[s] for s in slugs if s in index]
     if not chosen:
         return model
-    return Model(title=model.title, meta=model.meta, tsc=model.tsc, work_groups=chosen)
+    return Model(title=model.title, meta=model.meta, tsc=model.tsc,
+                 board_members=model.board_members, work_groups=chosen)
 
 
 def parse_file(path: str | Path) -> Model:
